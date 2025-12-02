@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 
 import logger from "@/config/logger";
 import env from "@/config/validate-env";
-import { errorHandler, notFoundHandler } from "@/middlewares/error-handler.middleware";
+import { errorHandler, notFoundHandler } from "@/presentation/middlewares/error-handler.middleware";
 
 jest.mock("@/config/logger", () => ({
   warn: jest.fn(),

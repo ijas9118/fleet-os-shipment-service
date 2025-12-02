@@ -5,8 +5,8 @@ import express from "express";
 import helmet from "helmet";
 import { StatusCodes } from "http-status-codes";
 
-import { errorHandler, notFoundHandler } from "./middlewares/error-handler.middleware";
-import limiter from "./middlewares/rate-limit.middleware";
+import { errorHandler, notFoundHandler } from "./presentation/middlewares/error-handler.middleware";
+import limiter from "./presentation/middlewares/rate-limit.middleware";
 
 export default function createApp(): Application {
   const app = express();

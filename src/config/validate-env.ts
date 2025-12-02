@@ -10,6 +10,8 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(3002),
   SERVICE_NAME: z.string(),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]),
+  DATABASE_URL: z.string(),
+  REDIS_URL: z.string(),
 });
 
 export type env = z.infer<typeof EnvSchema>;
