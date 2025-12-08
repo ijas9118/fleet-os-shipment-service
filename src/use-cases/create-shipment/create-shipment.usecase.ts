@@ -1,33 +1,29 @@
+import { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
+
 import type { Shipment } from "@/domain/entities/shipment";
-import type { IdGenerator } from "@/domain/interfaces/id-generator.interface";
-import type { ShipmentRepository } from "@/domain/repositories/shipment.repository";
+import type { IShipmentRepository } from "@/domain/repositories";
 
-import { ShipmentStatus } from "@/domain/entities/shipment";
+import { Shipment as ShipmentEntity } from "@/domain/entities/shipment";
 
-import type { CreateShipmentInput } from "./create-shipment.input.dto";
-
-import { CreateShipmentMapper } from "./create-shipment.mapper";
+import type { CreateShipmentDTO } from "./create-shipment.dto";
 
 export class CreateShipmentUseCase {
   constructor(
-    private _repo: ShipmentRepository,
-    private _idGenerator: IdGenerator,
+    private _repo: IShipmentRepository,
   ) {}
 
-  async execute(input: CreateShipmentInput): Promise<Shipment> {
-    const trackingNumber = `SHIP-${this._idGenerator.generate().slice(0, 8)}`;
+  async execute(dto: CreateShipmentDTO): Promise<Shipment> {
+    const shipment = new ShipmentEntity({
+      tenantId: dto.tenantId,
+      customer: dto.customer,
+      originWarehouseId: dto.originWarehouseId,
+      destinationAddress: dto.destinationAddress,
+      items: dto.items,
+      status: ShipmentStatus.PENDING_STOCK,
+      priority: dto.priority ?? "NORMAL",
+    });
 
-    const shipmentData = {
-      trackingNumber,
-      clientId: input.clientId,
-      status: ShipmentStatus.PENDING,
-      pickupAddress: input.pickupAddress,
-      deliveryAddress: input.deliveryAddress,
-      items: input.items,
-      isActive: true,
-    };
-    const result = await this._repo.create(shipmentData);
-
-    return CreateShipmentMapper.toEntity(result);
+    const created = await this._repo.create(shipment.propsSnapshot);
+    return created;
   }
 }

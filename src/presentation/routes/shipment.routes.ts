@@ -1,12 +1,17 @@
 import { Router } from "express";
 
-import { ShipmentFactory } from "@/infrastructure/factories/shipment.factory";
+import type { ShipmentController } from "../controllers/shipment.controller";
 
-export function createShipmentRoutes(): Router {
+import { authMiddleware } from "../middlewares/auth";
+
+export function buildShipmentRouter(controller: ShipmentController): Router {
   const router = Router();
-  const controller = ShipmentFactory.createController();
 
   router.post("/", controller.createShipment);
+
+  router.get("/:id", authMiddleware(), controller.getShipmentById);
+
+  router.get("/", authMiddleware(), controller.listShipments);
 
   return router;
 }

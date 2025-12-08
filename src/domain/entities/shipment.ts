@@ -1,53 +1,54 @@
-export enum ShipmentStatus {
-  PENDING = "PENDING",
-  ASSIGNED = "ASSIGNED",
-  PICKED_UP = "PICKED_UP",
-  IN_TRANSIT = "IN_TRANSIT",
-  DELIVERED = "DELIVERED",
-  CANCELLED = "CANCELLED",
-}
+import type { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
 
 export interface ShipmentItem {
-  name: string;
+  inventoryItemId: string;
   quantity: number;
-  weight: number;
+  uom: string;
 }
 
-export interface ShipmentLocation {
-  lat: number;
-  lng: number;
-  timestamp: Date;
-}
-
-export interface Shipment {
-  trackingNumber: string;
-  clientId: string;
-  status: ShipmentStatus;
-  pickupAddress: string;
-  deliveryAddress: string;
-
-  assignedDriverId?: string;
-  assignedVehicleId?: string;
-
-  currentLocation?: ShipmentLocation;
-
+export interface ShipmentProps {
+  readonly id?: string;
+  readonly tenantId: string;
+  customer: {
+    name: string;
+    email: string;
+    phone?: string;
+    referenceCode?: string;
+  };
+  originWarehouseId: string;
+  destinationAddress: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state?: string;
+    postalCode?: string;
+    country: string;
+  };
   items: ShipmentItem[];
+  status: ShipmentStatus;
+  reservationId?: string;
+  assignmentId?: string;
+  priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  estimatedDelivery?: Date;
-  actualDelivery?: Date;
+export class Shipment {
+  private props: ShipmentProps;
 
-  timestampsLog?: {
-    pickedUpAt?: Date;
-    inTransitAt?: Date;
-    deliveredAt?: Date;
-    cancelledAt?: Date;
-  };
+  constructor(props: ShipmentProps) {
+    this.props = {
+      priority: "NORMAL",
+      ...props,
+    };
+  }
 
-  pricing?: {
-    baseFee: number;
-    distanceFee: number;
-    total: number;
-  };
+  get id() { return this.props.id; }
+  get tenantId() { return this.props.tenantId; }
+  get status() { return this.props.status; }
+  get propsSnapshot() { return { ...this.props }; }
 
-  isActive?: boolean;
+  setStatus(status: ShipmentStatus) {
+    this.props.status = status;
+  }
 }
