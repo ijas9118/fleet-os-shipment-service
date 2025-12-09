@@ -1,5 +1,7 @@
 import type { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
 
+import { validTransitions } from "./valid-transitions";
+
 export interface ShipmentItem {
   inventoryItemId: string;
   quantity: number;
@@ -45,10 +47,25 @@ export class Shipment {
 
   get id() { return this.props.id; }
   get tenantId() { return this.props.tenantId; }
+  get customer() { return this.props.customer; }
+  get originWarehouseId() { return this.props.originWarehouseId; }
+  get destinationAddress() { return this.props.destinationAddress; }
+  get items() { return this.props.items; }
   get status() { return this.props.status; }
+  get reservationId() { return this.props.reservationId; }
+  get assignmentId() { return this.props.assignmentId; }
+  get priority() { return this.props.priority; }
+  get createdAt() { return this.props.createdAt; }
+  get updatedAt() { return this.props.updatedAt; }
+
   get propsSnapshot() { return { ...this.props }; }
 
-  setStatus(status: ShipmentStatus) {
-    this.props.status = status;
+  setStatus(next: ShipmentStatus) {
+    const allowed = validTransitions[this.props.status] ?? [];
+    if (!allowed.includes(next)) {
+      throw new Error(`Invalid status transition: ${this.props.status} → ${next}`);
+    }
+    this.props.status = next;
+    this.props.updatedAt = new Date();
   }
 }

@@ -13,5 +13,11 @@ export function buildShipmentRouter(controller: ShipmentController): Router {
 
   router.get("/", authMiddleware(), controller.listShipments);
 
+  router.patch(
+    "/:id/status",
+    authMiddleware(),
+    controller.updateShipmentStatus,
+  );
+
   return router;
 }
