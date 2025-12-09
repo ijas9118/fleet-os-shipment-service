@@ -34,9 +34,6 @@ describe("createShipmentUseCase", () => {
   });
 
   it("should create a shipment and return a Shipment entity", async () => {
-    const mockShipment = {};
-    mockRepo.create.mockResolvedValue(mockShipment);
-
     const input: CreateShipmentDTO = {
       tenantId: "tenant_001",
       customer: {
@@ -55,27 +52,27 @@ describe("createShipmentUseCase", () => {
       ],
     };
 
+    // Create a fake Shipment entity to be returned by the repo
+    const fakeCreatedShipment = new Shipment({
+      ...input,
+      id: "shp_001",
+      status: ShipmentStatus.PENDING_STOCK,
+      priority: "NORMAL",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    mockRepo.create.mockResolvedValue(fakeCreatedShipment);
+
     const result = await useCase.execute(input);
 
-    // Assert repo.create was called with enriched shipment data
+    // Assert repo.create was called correctly
     expect(mockRepo.create).toHaveBeenCalledWith({
       ...input,
-      status: ShipmentStatus.CREATED,
+      status: ShipmentStatus.PENDING_STOCK,
       priority: "NORMAL",
     });
 
-    // Assert returned instance is Shipment entity
     expect(result).toBeInstanceOf(Shipment);
-
-    // Assert mapped fields
-    // expect(result.id).toBe("shp_001");
-    // expect(result.status).toBe(ShipmentStatus.CREATED);
-    // expect(result.priority).toBe("NORMAL");
-    // expect(result.customer.name).toBe("John Doe");
-    // expect(result.items[0]).toEqual({
-    //   inventoryItemId: "inv_001",
-    //   quantity: 3,
-    //   uom: "PCS",
-    // });
   });
 });

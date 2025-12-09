@@ -98,4 +98,35 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
       },
     };
   }
+
+  async save(shipment: Shipment): Promise<Shipment> {
+    const object = {
+      tenantId: shipment.tenantId,
+      customer: shipment.customer,
+      originWarehouseId: shipment.originWarehouseId,
+      destinationAddress: shipment.destinationAddress,
+      items: shipment.items,
+      status: shipment.status,
+      reservationId: shipment.reservationId,
+      assignmentId: shipment.assignmentId,
+      priority: shipment.priority,
+      createdAt: shipment.createdAt,
+      updatedAt: new Date(),
+    };
+
+    const updatedDoc = await ShipmentModel.findOneAndUpdate(
+      {
+        _id: shipment.id,
+        tenantId: shipment.tenantId,
+      },
+      { $set: object },
+      { new: true, upsert: false },
+    );
+
+    if (!updatedDoc) {
+      throw new Error(`Shipment not found: ${shipment.id}`);
+    }
+
+    return ShipmentMapper.toDomain(updatedDoc);
+  }
 }

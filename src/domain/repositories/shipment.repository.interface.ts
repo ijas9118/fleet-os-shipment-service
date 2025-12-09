@@ -6,6 +6,5 @@ export interface IShipmentRepository {
   create: (data: ShipmentProps) => Promise<Shipment>;
   findById: (id: string, tenantId: string) => Promise<Shipment | null>;
   list: (dto: ListShipmentsDTO) => Promise<ListShipmentsResult>;
-  // findByTenant: (tenantId: string) => Promise<Shipment[]>;
-  // save: (shipment: Shipment) => Promise<void>;
+  save: (shipment: Shipment) => Promise<Shipment>;
 }

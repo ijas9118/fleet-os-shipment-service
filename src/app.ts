@@ -14,14 +14,16 @@ import { buildShipmentRouter } from "./presentation/routes/shipment.routes";
 import { CreateShipmentUseCase } from "./use-cases/create-shipment";
 import { GetShipmentUseCase } from "./use-cases/get-shipment/get-shipment.usecase";
 import { ListShipmentsUseCase } from "./use-cases/list-shipments/list-shipment.usecase";
+import { UpdateShipmentStatusUseCase } from "./use-cases/update-shipment-status";
 
 export default function createApp(): Application {
   const shipmentRepo = new ShipmentRepositoryMongo();
   const cacheRepo = new ShipmentCacheRedis();
   const createUC = new CreateShipmentUseCase(shipmentRepo);
   const listUC = new ListShipmentsUseCase(shipmentRepo, cacheRepo);
+  const updateStatusUC = new UpdateShipmentStatusUseCase(shipmentRepo);
   const getShipmentUC = new GetShipmentUseCase(shipmentRepo, cacheRepo);
-  const controller = new ShipmentController(createUC, getShipmentUC, listUC);
+  const controller = new ShipmentController(createUC, getShipmentUC, listUC, updateStatusUC);
 
   const app = express();
 

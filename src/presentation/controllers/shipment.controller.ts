@@ -5,6 +5,7 @@ import { STATUS_CODES } from "@ahammedijas/fleet-os-shared";
 import type { CreateShipmentUseCase } from "@/use-cases/create-shipment";
 import type { GetShipmentUseCase } from "@/use-cases/get-shipment/get-shipment.usecase";
 import type { ListShipmentsUseCase } from "@/use-cases/list-shipments/list-shipment.usecase";
+import type { UpdateShipmentStatusUseCase } from "@/use-cases/update-shipment-status";
 
 import { asyncHandler } from "../utils/async-handler";
 
@@ -13,6 +14,7 @@ export class ShipmentController {
     private _createShipmentUseCase: CreateShipmentUseCase,
     private _getShipmentUseCase: GetShipmentUseCase,
     private _listShipmentsUseCase: ListShipmentsUseCase,
+    private _updateShipmentStatusUseCase: UpdateShipmentStatusUseCase,
   ) {}
 
   createShipment = asyncHandler(async (req: Request, res: Response) => {
@@ -46,5 +48,23 @@ export class ShipmentController {
     });
 
     res.status(STATUS_CODES.OK).json(result);
+  });
+
+  updateShipmentStatus = asyncHandler(async (req: Request, res: Response) => {
+    const { user } = req;
+    const { id } = req.params;
+
+    if (!user) {
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: "Unauthorized: User missing" });
+    }
+
+    const shipment = await this._updateShipmentStatusUseCase.execute({
+      shipmentId: id,
+      tenantId: user.tenantId,
+      newStatus: req.body.status,
+      userId: user.id,
+      userRole: user.role,
+    });
+    res.status(STATUS_CODES.OK).json({ message: "Status Updated", data: shipment });
   });
 }
