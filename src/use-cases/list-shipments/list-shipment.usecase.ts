@@ -1,13 +1,10 @@
-import type { IShipmentCacheRepository, IShipmentRepository } from "@/domain/repositories";
+import type { IShipmentRepository } from "@/domain/repositories";
 
 import type { ListShipmentsDTO } from "../../domain/repositories/dto/list-shipment.dto";
 import type { ListShipmentsResult } from "../../domain/repositories/dto/list-shipment.result";
 
 export class ListShipmentsUseCase {
-  constructor(
-    private _repo: IShipmentRepository,
-    private _cacheRepo: IShipmentCacheRepository,
-  ) {}
+  constructor(private readonly _repo: IShipmentRepository) {}
 
   async execute(dto: ListShipmentsDTO): Promise<ListShipmentsResult> {
     const page = Math.max(1, dto.page ?? 1);

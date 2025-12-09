@@ -1,13 +1,16 @@
 import type { ShipmentStatus, UserRole } from "@ahammedijas/fleet-os-shared";
 
-import type { IShipmentRepository } from "@/domain/repositories";
+import type { IShipmentCacheRepository, IShipmentRepository } from "@/domain/repositories";
 
 import type { UpdateShipmentStatusDTO } from "./update-shipment-status.dto";
 
 import { rolePermissions } from "./role-permissions";
 
 export class UpdateShipmentStatusUseCase {
-  constructor(private _repo: IShipmentRepository) {}
+  constructor(
+    private readonly _repo: IShipmentRepository,
+    private readonly _cacheRepo?: IShipmentCacheRepository,
+  ) {}
 
   private canUpdateStatus(role: UserRole, newStatus: ShipmentStatus): boolean {
     const allowedStatuses = rolePermissions[role];
@@ -29,13 +32,16 @@ export class UpdateShipmentStatusUseCase {
       throw new Error("Shipment not found");
     }
 
-    // Let entity validate transition
     shipment.setStatus(newStatus);
 
     // Optionally: append to timeline inside entity here
     // shipment.addTimelineEntry(newStatus, userId);
 
     await this._repo.save(shipment);
+
+    if (this._cacheRepo) {
+      await this._cacheRepo.invalidate(shipmentId, tenantId);
+    }
 
     return shipment;
   }
