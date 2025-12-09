@@ -7,7 +7,7 @@ import type { GetShipmentDTO } from "./get-shipment.dto";
 export class GetShipmentUseCase {
   constructor(
     private readonly _shipmentRepo: IShipmentRepository,
-    private readonly _cacheRepo: IShipmentCacheRepository,
+    private readonly _cacheRepo?: IShipmentCacheRepository,
   ) {}
 
   async execute(dto: GetShipmentDTO): Promise<Shipment | null> {

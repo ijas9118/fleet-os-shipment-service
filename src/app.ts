@@ -20,7 +20,7 @@ export default function createApp(): Application {
   const shipmentRepo = new ShipmentRepositoryMongo();
   const cacheRepo = new ShipmentCacheRedis();
   const createUC = new CreateShipmentUseCase(shipmentRepo);
-  const listUC = new ListShipmentsUseCase(shipmentRepo, cacheRepo);
+  const listUC = new ListShipmentsUseCase(shipmentRepo);
   const updateStatusUC = new UpdateShipmentStatusUseCase(shipmentRepo);
   const getShipmentUC = new GetShipmentUseCase(shipmentRepo, cacheRepo);
   const controller = new ShipmentController(createUC, getShipmentUC, listUC, updateStatusUC);
