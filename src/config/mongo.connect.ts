@@ -5,8 +5,9 @@ import env from "./validate-env";
 
 async function connectMongo() {
   try {
+    mongoose.set("strictQuery", true);
     await mongoose.connect(env.DATABASE_URL, { minPoolSize: 1, maxPoolSize: 10 });
-    logger.info("✅ Connected to MongoDB");
+    logger.info("✅ Connected to MongoDB", env.SERVICE_NAME);
   }
   catch (error) {
     logger.error("❌ MongoDB connection error:", error);

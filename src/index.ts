@@ -1,5 +1,3 @@
-import "reflect-metadata";
-
 import createApp from "./app";
 import { initConfig } from "./config/init-config";
 import logger from "./config/logger";
