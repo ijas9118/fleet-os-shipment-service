@@ -6,26 +6,14 @@ import express from "express";
 import helmet from "helmet";
 
 import logger from "./config/logger";
-import { ShipmentCacheRedis } from "./infrastructure/repositories/shipment.cache.repository";
-import { ShipmentRepositoryMongo } from "./infrastructure/repositories/shipment.repository";
-import { ShipmentController } from "./presentation/controllers/shipment.controller";
+import { buildContainer } from "./di/container";
 import { errorHandler, limiter, notFoundHandler } from "./presentation/middlewares";
 import { buildShipmentRouter } from "./presentation/routes/shipment.routes";
-import { CreateShipmentUseCase } from "./use-cases/create-shipment";
-import { GetShipmentUseCase } from "./use-cases/get-shipment/get-shipment.usecase";
-import { ListShipmentsUseCase } from "./use-cases/list-shipments/list-shipment.usecase";
-import { UpdateShipmentStatusUseCase } from "./use-cases/update-shipment-status";
 
 export default function createApp(): Application {
-  const shipmentRepo = new ShipmentRepositoryMongo();
-  const cacheRepo = new ShipmentCacheRedis();
-  const createUC = new CreateShipmentUseCase(shipmentRepo);
-  const listUC = new ListShipmentsUseCase(shipmentRepo);
-  const updateStatusUC = new UpdateShipmentStatusUseCase(shipmentRepo);
-  const getShipmentUC = new GetShipmentUseCase(shipmentRepo, cacheRepo);
-  const controller = new ShipmentController(createUC, getShipmentUC, listUC, updateStatusUC);
-
   const app = express();
+
+  const container = buildContainer();
 
   app.use(helmet());
   app.use(cors());
@@ -42,7 +30,7 @@ export default function createApp(): Application {
     res.status(STATUS_CODES.OK).json({ status: "ok" });
   });
 
-  app.use("/shipments", buildShipmentRouter(controller));
+  app.use("/shipments", buildShipmentRouter(container.shipmentController));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
