@@ -1,6 +1,7 @@
 import type { ShipmentStatus, UserRole } from "@ahammedijas/fleet-os-shared";
 
-import type { IShipmentCacheRepository, IShipmentRepository } from "@/domain/repositories";
+import type { IShipmentRepository } from "@/domain/repositories";
+import type { ICacheRepository } from "@/infrastructure/cache/cache.repository";
 
 import { PermissionDeniedError, ShipmentNotFoundError } from "@/domain/errors";
 
@@ -11,8 +12,12 @@ import { rolePermissions } from "./role-permissions";
 export class UpdateShipmentStatusUseCase {
   constructor(
     private readonly _repo: IShipmentRepository,
-    private readonly _cacheRepo?: IShipmentCacheRepository,
+    private readonly _cache?: ICacheRepository,
   ) {}
+
+  private makeKey(id: string, tenantId: string) {
+    return `shipment:${tenantId}:${id}`;
+  }
 
   private canUpdateStatus(role: UserRole, newStatus: ShipmentStatus): boolean {
     const allowedStatuses = rolePermissions[role];
@@ -41,8 +46,8 @@ export class UpdateShipmentStatusUseCase {
 
     await this._repo.save(shipment);
 
-    if (this._cacheRepo) {
-      await this._cacheRepo.invalidate(shipmentId, tenantId);
+    if (this._cache) {
+      await this._cache.delete(this.makeKey(shipmentId, tenantId));
     }
 
     return shipment;

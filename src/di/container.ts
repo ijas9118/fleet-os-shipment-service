@@ -1,4 +1,4 @@
-import { ShipmentCacheRedis } from "@/infrastructure/repositories/shipment.cache.repository";
+import { RedisCacheRepository } from "@/infrastructure/cache/redis.cache.repository";
 import { ShipmentRepositoryMongo } from "@/infrastructure/repositories/shipment.repository";
 import { ShipmentController } from "@/presentation/controllers/shipment.controller";
 import { CreateShipmentUseCase } from "@/use-cases/create-shipment";
@@ -9,7 +9,7 @@ import { UpdateShipmentStatusUseCase } from "@/use-cases/update-shipment-status"
 export function buildContainer() {
   // --- Repositories ---
   const shipmentRepo = new ShipmentRepositoryMongo();
-  const cacheRepo = new ShipmentCacheRedis();
+  const cacheRepo = new RedisCacheRepository();
 
   // --- Use Cases ---
   const createShipmentUC = new CreateShipmentUseCase(shipmentRepo);

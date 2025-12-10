@@ -2,9 +2,10 @@ import { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
 
 // tests/mocks/shipment.mock.ts
 import type { ShipmentProps } from "@/domain/entities/shipment";
-import type { IShipmentCacheRepository, IShipmentRepository } from "@/domain/repositories";
+import type { IShipmentRepository } from "@/domain/repositories";
 import type { ListShipmentsDTO } from "@/domain/repositories/dto/list-shipment.dto";
 import type { ListShipmentsResult } from "@/domain/repositories/dto/list-shipment.result";
+import type { RedisCacheRepository } from "@/infrastructure/cache/redis.cache.repository";
 
 import { Shipment } from "@/domain/entities/shipment";
 
@@ -40,10 +41,10 @@ export const mockShipmentRepository: jest.Mocked<IShipmentRepository> = {
   save: jest.fn(),
 };
 
-export const mockCacheRepository: jest.Mocked<IShipmentCacheRepository> = {
-  getById: jest.fn(),
+export const mockCacheRepository: jest.Mocked<RedisCacheRepository> = {
+  get: jest.fn(),
   set: jest.fn(),
-  invalidate: jest.fn(),
+  delete: jest.fn(),
 };
 
 export const mockListShipmentsResult: ListShipmentsResult = {
