@@ -1,5 +1,6 @@
 import type { GetShipmentDTO } from "@/use-cases/get-shipment/get-shipment.dto";
 
+import { ShipmentNotFoundError } from "@/domain/errors";
 import { GetShipmentUseCase } from "@/use-cases/get-shipment/get-shipment.usecase";
 
 import { mockCacheRepository, mockShipment, mockShipmentRepository } from "../mocks/shipment.mock";
@@ -43,16 +44,17 @@ describe("getShipmentUseCase", () => {
     expect(result).toEqual(mockShipment);
   });
 
-  it("should return null when shipment not found", async () => {
+  it("should throw ShipmentNotFoundError when shipment not found", async () => {
     cacheRepo.getById.mockResolvedValue(null);
     shipmentRepo.findById.mockResolvedValue(null);
 
-    const result = await useCase.execute(dto);
+    await expect(useCase.execute(dto)).rejects.toThrow(ShipmentNotFoundError);
 
-    expect(cacheRepo.getById).toHaveBeenCalled();
-    expect(shipmentRepo.findById).toHaveBeenCalled();
+    expect(cacheRepo.getById).toHaveBeenCalledWith(dto.id, dto.tenantId);
+    expect(shipmentRepo.findById).toHaveBeenCalledWith(dto.id, dto.tenantId);
+
+    // cache should NOT be written to
     expect(cacheRepo.set).not.toHaveBeenCalled();
-    expect(result).toBeNull();
   });
 
   it("should skip cache when cache repository is not provided", async () => {
