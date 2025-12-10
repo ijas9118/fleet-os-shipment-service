@@ -1,4 +1,3 @@
-// src/types/express.d.ts (create this file)
 import type { UserRole } from "../domain/entities/User";
 
 declare global {

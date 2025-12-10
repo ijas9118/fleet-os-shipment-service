@@ -4,7 +4,8 @@ import { STATUS_CODES } from "@ahammedijas/fleet-os-shared";
 
 import logger from "@/config/logger";
 import env from "@/config/validate-env";
-import { AppError } from "@/domain/errors/app-error";
+
+import { mapToHttpError } from "../utils/map-to-http-error";
 
 export function notFoundHandler(req: Request, res: Response, _next: NextFunction) {
   logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`);
@@ -20,39 +21,21 @@ export function notFoundHandler(req: Request, res: Response, _next: NextFunction
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction) {
-  // Handle AppError instances
-  if (err instanceof AppError) {
-    logger.warn(`Business error: ${err.message}`, {
-      code: err.code,
-      statusCode: err.statusCode,
-      path: req.originalUrl,
-    });
-
-    return res.status(err.statusCode).json({
-      success: false,
-      error: {
-        code: err.code || "BUSINESS_ERROR",
-        message: err.message,
-        path: req.originalUrl,
-        method: req.method,
-      },
-    });
-  }
-
-  // Handle other errors
-  const statusCode = (err as any).statusCode || STATUS_CODES.INTERNAL_SERVER_ERROR;
+  const httpErr = mapToHttpError(err);
   const isProd = env.NODE_ENV === "production";
 
-  logger.error(`Unhandled error: ${err.message}`, {
-    stack: err.stack,
-    path: req.originalUrl,
+  logger.error(`Error on ${req.method} ${req.originalUrl}: ${httpErr.message}`, {
+    stack: httpErr.stack,
+    originalError: err,
   });
 
-  res.status(statusCode).json({
+  res.status(httpErr.statusCode).json({
     success: false,
     error: {
-      code: "INTERNAL_ERROR",
-      message: isProd ? "Something went wrong!!" : err.message,
+      code: httpErr.code ?? "INTERNAL_ERROR",
+      message: isProd && httpErr.statusCode === STATUS_CODES.INTERNAL_SERVER_ERROR
+        ? "Something went wrong!!"
+        : httpErr.message,
       path: req.originalUrl,
       method: req.method,
     },

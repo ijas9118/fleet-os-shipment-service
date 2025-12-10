@@ -6,6 +6,8 @@ import type { IShipmentRepository } from "@/domain/repositories";
 import type { ListShipmentsDTO } from "@/domain/repositories/dto/list-shipment.dto";
 import type { ListShipmentsResult } from "@/domain/repositories/dto/list-shipment.result";
 
+import { ShipmentNotFoundError } from "@/domain/errors";
+
 import { ShipmentMapper } from "../mappers/shipment.mapper";
 import { ShipmentModel } from "../models/shipment.model";
 
@@ -19,7 +21,7 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
   async findById(id: string, tenantId: string): Promise<Shipment | null> {
     const doc = await ShipmentModel.findOne({ _id: id, tenantId });
     if (!doc)
-      return null;
+      throw new ShipmentNotFoundError(id);
 
     return ShipmentMapper.toDomain(doc);
   }
@@ -124,7 +126,7 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
     );
 
     if (!updatedDoc) {
-      throw new Error(`Shipment not found: ${shipment.id}`);
+      throw new ShipmentNotFoundError(shipment.id as string);
     }
 
     return ShipmentMapper.toDomain(updatedDoc);

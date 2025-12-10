@@ -2,6 +2,8 @@ import type { ShipmentStatus, UserRole } from "@ahammedijas/fleet-os-shared";
 
 import type { IShipmentCacheRepository, IShipmentRepository } from "@/domain/repositories";
 
+import { PermissionDeniedError, ShipmentNotFoundError } from "@/domain/errors";
+
 import type { UpdateShipmentStatusDTO } from "./update-shipment-status.dto";
 
 import { rolePermissions } from "./role-permissions";
@@ -24,12 +26,12 @@ export class UpdateShipmentStatusUseCase {
     const { shipmentId, tenantId, newStatus, userRole } = dto;
 
     if (!this.canUpdateStatus(userRole, newStatus)) {
-      throw new Error("Forbidden: role not allowed to set this status");
+      throw new PermissionDeniedError(userRole, newStatus);
     }
 
     const shipment = await this._repo.findById(shipmentId, tenantId);
     if (!shipment) {
-      throw new Error("Shipment not found");
+      throw new ShipmentNotFoundError(shipmentId);
     }
 
     shipment.setStatus(newStatus);

@@ -1,5 +1,6 @@
 import type { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
 
+import { InvalidStatusTransitionError } from "../errors";
 import { validTransitions } from "./valid-transitions";
 
 export interface ShipmentItem {
@@ -63,7 +64,7 @@ export class Shipment {
   setStatus(next: ShipmentStatus) {
     const allowed = validTransitions[this.props.status] ?? [];
     if (!allowed.includes(next)) {
-      throw new Error(`Invalid status transition: ${this.props.status} → ${next}`);
+      throw new InvalidStatusTransitionError(this.props.status, next);
     }
     this.props.status = next;
     this.props.updatedAt = new Date();
