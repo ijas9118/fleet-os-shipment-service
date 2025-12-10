@@ -1,6 +1,5 @@
-import "reflect-metadata";
-
 import createApp from "./app";
+import { initConfig } from "./config/init-config";
 import logger from "./config/logger";
 import env from "./config/validate-env";
 
@@ -10,6 +9,7 @@ const PORT = env.PORT || 3002;
 
 (async () => {
   try {
+    await initConfig();
     app.listen(PORT, () => {
       logger.info(`Shipment Server started on port ${PORT}`);
     });
