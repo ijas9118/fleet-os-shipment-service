@@ -17,6 +17,8 @@ export class ListShipmentsUseCase {
       search: dto.search?.trim(),
       sortBy: dto.sortBy,
       sortOrder: dto.sortOrder,
+      // startDate: dto.endDate,
+      // endDate: dto.endDate,
       includeCancelled: !!dto.includeCancelled,
     });
   }

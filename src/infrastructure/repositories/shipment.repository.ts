@@ -27,7 +27,15 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
   }
 
   async list(dto: ListShipmentsDTO): Promise<ListShipmentsResult> {
-    const { tenantId, page = 1, limit = 10, search, sortBy, sortOrder, includeCancelled = false } = dto;
+    const {
+      tenantId,
+      page = 1,
+      limit = 10,
+      search,
+      sortBy,
+      sortOrder,
+      includeCancelled = false,
+    } = dto;
     const query: any = {
       tenantId: new mongoose.Types.ObjectId(tenantId),
     };

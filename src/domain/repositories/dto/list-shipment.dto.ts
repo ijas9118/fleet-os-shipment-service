@@ -5,5 +5,7 @@ export interface ListShipmentsDTO {
   search?: string;
   sortBy?: string;
   sortOrder?: string;
+  // startDate?: Date;
+  // endDate?: Date;
   includeCancelled?: boolean;
 }
