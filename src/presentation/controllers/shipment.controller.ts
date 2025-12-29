@@ -7,6 +7,8 @@ import type { GetShipmentUseCase } from "@/use-cases/get-shipment/get-shipment.u
 import type { ListShipmentsUseCase } from "@/use-cases/list-shipments/list-shipment.usecase";
 import type { UpdateShipmentStatusUseCase } from "@/use-cases/update-shipment-status";
 
+import { MESSAGES } from "@/config/messages.constant";
+
 import { asyncHandler } from "../utils/async-handler";
 
 export class ShipmentController {
@@ -33,7 +35,7 @@ export class ShipmentController {
     const shipment = await this._getShipmentUseCase.execute({ id, tenantId });
 
     if (!shipment)
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Shipment Not Found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: MESSAGES.SHIPMENT.NOT_FOUND });
 
     res.status(STATUS_CODES.OK).json({
       success: true,
@@ -55,7 +57,7 @@ export class ShipmentController {
     const { id } = req.params;
 
     if (!user) {
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: "Unauthorized: User missing" });
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: MESSAGES.ERROR.UNAUTHORIZED });
     }
 
     const shipment = await this._updateShipmentStatusUseCase.execute({
@@ -65,6 +67,6 @@ export class ShipmentController {
       userId: user.id,
       userRole: user.role,
     });
-    res.status(STATUS_CODES.OK).json({ message: "Status Updated", data: shipment });
+    res.status(STATUS_CODES.OK).json({ message: MESSAGES.SHIPMENT.STATUS_UPDATED, data: shipment });
   });
 }
