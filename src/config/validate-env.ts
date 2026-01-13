@@ -12,6 +12,8 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
+  INVENTORY_SERVICE_URL: z.string(),
+  INVENTORY_SERVICE_API_KEY: z.string(),
 });
 
 export type env = z.infer<typeof EnvSchema>;

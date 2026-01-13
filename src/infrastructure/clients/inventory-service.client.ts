@@ -1,3 +1,8 @@
+import type { AxiosInstance } from "axios";
+
+import axios from "axios";
+
+import logger from "@/config/logger";
 import { InsufficientInventoryError } from "@/domain/errors";
 
 import type {
@@ -8,86 +13,82 @@ import type {
 } from "./inventory-service.client.interface";
 
 export class InventoryServiceHttpClient implements IInventoryServiceClient {
-  private readonly _baseUrl: string;
-  private readonly _timeout: number = 5000;
+  private client: AxiosInstance;
 
-  constructor(baseUrl: string) {
-    this._baseUrl = baseUrl;
+  constructor(baseUrl: string, apiKey: string) {
+    this.client = axios.create({
+      baseURL: baseUrl,
+      headers: {
+        "x-internal-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      timeout: 5000,
+    });
   }
 
   async reserveStock(request: ReserveStockRequest): Promise<ReserveStockResponse> {
     try {
-      const response = await fetch(`${this._baseUrl}/api/reservations/reserve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-        signal: AbortSignal.timeout(this._timeout),
+      const response = await this.client.post<{ data: ReserveStockResponse }>(
+        "/api/v1/reservations/reserve",
+        request,
+      );
+
+      logger.info("Successfully reserved stock in inventory service", {
+        reservationId: response.data.data.reservationId,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+      return response.data.data;
+    }
+    catch (error: any) {
+      // Handle axios errors
+      if (error.response) {
+        const errorData = error.response.data?.error || error.response.data;
+
+        logger.error("Failed to reserve stock in inventory service", {
+          status: error.response.status,
+          errorData,
+        });
 
         // Handle insufficient stock error
-        if (response.status === 400 && errorData.code === "INSUFFICIENT_STOCK") {
+        if (error.response.status === 400 && errorData.code === "INSUFFICIENT_STOCK") {
           throw new InsufficientInventoryError(
             errorData.sku || "unknown",
-            errorData.required || 0,
+            errorData.requested || 0,
             errorData.available || 0,
           );
         }
 
-        throw new Error(`Inventory service error: ${response.status} - ${errorData.message || "Unknown error"}`);
+        // Rethrow with meaningful message
+        throw new Error(errorData.message || "Failed to reserve stock in inventory service");
       }
 
-      const data = await response.json();
+      // Network or other errors
+      logger.error("Network error while reserving stock", {
+        error: error.message,
+      });
 
-      return {
-        reservationId: data.reservationId,
-        success: data.success,
-        expiresAt: new Date(data.expiresAt),
-      };
-    }
-    catch (error) {
-      if (error instanceof InsufficientInventoryError) {
-        throw error;
-      }
-
-      // Handle timeout
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error("Inventory service request timeout");
-      }
-
-      // Handle network errors
-      throw new Error(`Failed to reserve stock: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(`Failed to reserve stock: ${error.message || "Unknown error"}`);
     }
   }
 
   async releaseReservation(request: ReleaseReservationRequest): Promise<void> {
     try {
-      const response = await fetch(`${this._baseUrl}/api/reservations/release`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-        signal: AbortSignal.timeout(this._timeout),
+      await this.client.post("/api/v1/reservations/release", request);
+
+      logger.info("Successfully released reservation in inventory service", {
+        reservationId: request.reservationId,
+      });
+    }
+    catch (error: any) {
+      logger.error("Failed to release reservation in inventory service", {
+        error: error.message,
+        response: error.response?.data,
+        reservationId: request.reservationId,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Failed to release reservation: ${response.status} - ${errorData.message || "Unknown error"}`);
-      }
-    }
-    catch (error) {
-      // Handle timeout
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error("Inventory service request timeout");
-      }
-
-      // Handle network errors
-      throw new Error(`Failed to release reservation: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(
+        `Failed to release reservation: ${error.response?.data?.message || error.message || "Unknown error"}`,
+      );
     }
   }
 }
