@@ -43,4 +43,3 @@ export interface PaginatedShipmentsResponse {
 
 // Re-export the options type
 export type { ListShipmentsOptions };
-
