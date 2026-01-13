@@ -20,7 +20,7 @@ export function buildShipmentRoutes(controller: ShipmentController): Router {
     requireRole([
       UserRole.TENANT_ADMIN,
       UserRole.OPERATIONS_MANAGER,
-
+      UserRole.DRIVER,
     ]),
     controller.listShipments,
   );
@@ -39,7 +39,7 @@ export function buildShipmentRoutes(controller: ShipmentController): Router {
     requireRole([
       UserRole.TENANT_ADMIN,
       UserRole.OPERATIONS_MANAGER,
-
+      UserRole.DRIVER,
     ]),
     controller.getShipment,
   );
@@ -47,7 +47,7 @@ export function buildShipmentRoutes(controller: ShipmentController): Router {
   // Update shipment
   router.put(
     "/:id",
-    requireRole([UserRole.TENANT_ADMIN, UserRole.OPERATIONS_MANAGER]),
+    requireRole([UserRole.TENANT_ADMIN]),
     validate(UpdateShipmentDTOSchema),
     controller.updateShipment,
   );
