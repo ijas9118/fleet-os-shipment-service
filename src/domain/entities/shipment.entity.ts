@@ -1,4 +1,4 @@
-import type { ReservationStatus, ShipmentStatus } from "../enums";
+import type { ShipmentStatus } from "../enums";
 
 import { ValidationError } from "../errors";
 
@@ -26,13 +26,6 @@ export interface ShipmentItem {
   unit: string;
 }
 
-export interface Reservation {
-  status: ReservationStatus;
-  reservedAt?: Date;
-  releasedAt?: Date;
-  expiresAt?: Date;
-}
-
 export interface ShipmentProps {
   id?: string;
   tenantId: string;
@@ -42,7 +35,7 @@ export interface ShipmentProps {
   items: ShipmentItem[];
   destinationAddress: Address;
   customer: CustomerDetails;
-  reservation: Reservation;
+  inventoryReservationId?: string; // Reference to inventory service reservation
   notes?: string;
   estimatedDeliveryDate?: Date;
   actualDeliveryDate?: Date;
@@ -84,9 +77,6 @@ export class Shipment {
 
     // Validate customer details
     this._validateCustomer(props.customer);
-
-    // Validate reservation
-    this._validateReservation(props.reservation);
   }
 
   private _validateItems(items: ShipmentItem[]): void {
@@ -162,16 +152,6 @@ export class Shipment {
     }
   }
 
-  private _validateReservation(reservation: Reservation): void {
-    if (!reservation) {
-      throw new ValidationError("Reservation details are required");
-    }
-
-    if (!reservation.status) {
-      throw new ValidationError("Reservation status is required");
-    }
-  }
-
   // Getters
   get id(): string | undefined {
     return this._props.id;
@@ -205,8 +185,8 @@ export class Shipment {
     return { ...this._props.customer };
   }
 
-  get reservation(): Reservation {
-    return { ...this._props.reservation };
+  get inventoryReservationId(): string | undefined {
+    return this._props.inventoryReservationId;
   }
 
   get notes(): string | undefined {
@@ -239,7 +219,6 @@ export class Shipment {
       items: [...this._props.items],
       destinationAddress: { ...this._props.destinationAddress },
       customer: { ...this._props.customer },
-      reservation: { ...this._props.reservation },
     };
   }
 
@@ -275,9 +254,7 @@ export class Shipment {
     this._props.status = "DELIVERED" as ShipmentStatus;
     this._props.actualDeliveryDate = deliveryDate || new Date();
     this._props.updatedAt = new Date();
-
-    // Release reservation on delivery
-    this.releaseReservation();
+    // Note: Inventory service should be called to release reservation
   }
 
   cancel(): void {
@@ -286,9 +263,7 @@ export class Shipment {
     }
     this._props.status = "CANCELLED" as ShipmentStatus;
     this._props.updatedAt = new Date();
-
-    // Release reservation on cancellation
-    this.releaseReservation();
+    // Note: Inventory service should be called to release reservation
   }
 
   markAsReturned(): void {
@@ -301,12 +276,6 @@ export class Shipment {
 
   archive(): void {
     this._props.deletedAt = new Date();
-    this._props.updatedAt = new Date();
-  }
-
-  releaseReservation(): void {
-    this._props.reservation.status = "RELEASED" as ReservationStatus;
-    this._props.reservation.releasedAt = new Date();
     this._props.updatedAt = new Date();
   }
 
