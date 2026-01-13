@@ -1,1 +1,1 @@
-export { IShipmentRepository } from "./shipment.repository.interface";
+export type { IShipmentRepository, ListShipmentsOptions } from "./shipment.repository.interface";

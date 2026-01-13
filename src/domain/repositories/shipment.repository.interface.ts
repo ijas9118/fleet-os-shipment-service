@@ -1,10 +1,23 @@
-import type { Shipment, ShipmentProps } from "../entities/shipment";
-import type { ListShipmentsDTO } from "./dto/list-shipment.dto";
-import type { ListShipmentsResult } from "./dto/list-shipment.result";
+import type { Shipment } from "../entities";
+
+export interface ListShipmentsOptions {
+  tenantId: string;
+  page: number;
+  limit: number;
+  search?: string;
+  status?: string;
+  warehouseId?: string;
+  customerId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  includeDeleted?: boolean;
+}
 
 export interface IShipmentRepository {
-  create: (data: ShipmentProps) => Promise<Shipment>;
+  create: (shipment: Shipment) => Promise<Shipment>;
   findById: (id: string, tenantId: string) => Promise<Shipment | null>;
-  list: (dto: ListShipmentsDTO) => Promise<ListShipmentsResult>;
-  save: (shipment: Shipment) => Promise<Shipment>;
+  findByTrackingId: (trackingId: string) => Promise<Shipment | null>;
+  list: (options: ListShipmentsOptions) => Promise<{ shipments: Shipment[]; total: number }>;
+  update: (id: string, updates: Partial<Shipment>) => Promise<void>;
+  delete: (id: string) => Promise<void>;
 }

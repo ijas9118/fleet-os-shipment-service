@@ -1,25 +1,28 @@
 import {
-  InvalidStatusTransitionError,
-  PermissionDeniedError,
-  ShipmentNotFoundError,
+  InsufficientInventoryError,
+  ValidationError,
 } from "@/domain/errors";
 
 import {
   AppError,
   BadRequestError,
-  ForbiddenError,
-  NotFoundError,
 } from "../errors";
 
 export function mapToHttpError(err: unknown): AppError {
-  if (err instanceof InvalidStatusTransitionError)
+  if (err instanceof ValidationError)
     return new BadRequestError(err.message);
 
-  if (err instanceof PermissionDeniedError)
-    return new ForbiddenError(err.message);
+  if (err instanceof InsufficientInventoryError)
+    return new BadRequestError(err.message);
 
-  if (err instanceof ShipmentNotFoundError)
-    return new NotFoundError(err.message);
+  // if (err instanceof InvalidStatusTransitionError)
+  //   return new BadRequestError(err.message);
+
+  // if (err instanceof PermissionDeniedError)
+  //   return new ForbiddenError(err.message);
+
+  // if (err instanceof ShipmentNotFoundError)
+  //   return new NotFoundError(err.message);
 
   if (err instanceof AppError)
     return err;

@@ -3,7 +3,6 @@ import type { NextFunction, Request, Response } from "express";
 import { STATUS_CODES } from "@ahammedijas/fleet-os-shared";
 
 import logger from "@/config/logger";
-import { MESSAGES } from "@/config/messages.constant";
 import env from "@/config/validate-env";
 
 import { mapToHttpError } from "../utils/map-to-http-error";
@@ -35,7 +34,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     error: {
       code: httpErr.code ?? "INTERNAL_ERROR",
       message: isProd && httpErr.statusCode === STATUS_CODES.INTERNAL_SERVER_ERROR
-        ? MESSAGES.ERROR.INTERNAL_SERVER_ERROR
+        ? "Something went wrong!!"
         : httpErr.message,
       path: req.originalUrl,
       method: req.method,

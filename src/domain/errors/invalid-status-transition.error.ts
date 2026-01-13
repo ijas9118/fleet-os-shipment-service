@@ -1,4 +1,4 @@
-import type { ShipmentStatus } from "@ahammedijas/fleet-os-shared";
+import type { ShipmentStatus } from "../enums";
 
 import { DomainError } from "../entities/domain.error";
 
