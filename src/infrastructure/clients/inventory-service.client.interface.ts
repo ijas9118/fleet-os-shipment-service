@@ -21,6 +21,22 @@ export interface ReleaseReservationRequest {
   tenantId: string;
 }
 
+export interface ConfirmReservationRequest {
+  reservationId: string;
+  tenantId: string;
+}
+
+export interface AddStockRequest {
+  tenantId: string;
+  warehouseId: string;
+  items: Array<{
+    inventoryItemId: string;
+    sku: string;
+    quantity: number;
+  }>;
+  notes?: string;
+}
+
 /**
  * Interface for communicating with the Inventory Service
  * This will be implemented to make HTTP calls to the inventory service API
@@ -36,4 +52,14 @@ export interface IInventoryServiceClient {
    * Release a previously created reservation
    */
   releaseReservation: (request: ReleaseReservationRequest) => Promise<void>;
+
+  /**
+   * Confirm a reservation and deduct actual stock
+   */
+  confirmReservation: (request: ConfirmReservationRequest) => Promise<void>;
+
+  /**
+   * Add stock back to inventory (for returned/cancelled shipments)
+   */
+  addStock: (request: AddStockRequest) => Promise<void>;
 }

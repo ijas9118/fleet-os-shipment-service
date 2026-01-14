@@ -1,8 +1,10 @@
 import { UserRole } from "@ahammedijas/fleet-os-shared";
 import { Router } from "express";
 
+import { AssignToDriverDTOSchema } from "@/use-cases/assign-to-driver";
 import { CreateShipmentDTOSchema } from "@/use-cases/create-shipment";
 import { UpdateShipmentDTOSchema } from "@/use-cases/update-shipment";
+import { UpdateStatusDTOSchema } from "@/use-cases/update-status";
 
 import type { ShipmentController } from "../controllers/shipment.controller";
 
@@ -64,6 +66,25 @@ export function buildShipmentRoutes(controller: ShipmentController): Router {
     "/:id",
     requireRole([UserRole.TENANT_ADMIN, UserRole.OPERATIONS_MANAGER]),
     controller.deleteShipment,
+  );
+
+  // Assign shipment to driver (for ops managers)
+  router.post(
+    "/:id/assign-driver",
+    requireRole([UserRole.OPERATIONS_MANAGER, UserRole.TENANT_ADMIN]),
+    validate(AssignToDriverDTOSchema),
+    controller.assignToDriver,
+  );
+
+  router.patch(
+    "/:id/status",
+    requireRole([
+      UserRole.DRIVER,
+      UserRole.OPERATIONS_MANAGER,
+      UserRole.TENANT_ADMIN,
+    ]),
+    validate(UpdateStatusDTOSchema),
+    controller.updateStatus,
   );
 
   return router;

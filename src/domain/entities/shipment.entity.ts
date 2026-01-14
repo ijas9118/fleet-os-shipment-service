@@ -1,5 +1,4 @@
-import type { ShipmentStatus } from "../enums";
-
+import { ShipmentStatus } from "../enums";
 import { ValidationError } from "../errors";
 
 export interface Address {
@@ -36,6 +35,8 @@ export interface ShipmentProps {
   destinationAddress: Address;
   customer: CustomerDetails;
   inventoryReservationId?: string; // Reference to inventory service reservation
+  driverId?: string; // Reference to assigned driver
+  driverName?: string; // Driver's name for quick access
   notes?: string;
   estimatedDeliveryDate?: Date;
   actualDeliveryDate?: Date;
@@ -189,6 +190,14 @@ export class Shipment {
     return this._props.inventoryReservationId;
   }
 
+  get driverId(): string | undefined {
+    return this._props.driverId;
+  }
+
+  get driverName(): string | undefined {
+    return this._props.driverName;
+  }
+
   get notes(): string | undefined {
     return this._props.notes;
   }
@@ -301,6 +310,54 @@ export class Shipment {
 
   updateEstimatedDeliveryDate(date: Date): void {
     this._props.estimatedDeliveryDate = date;
+    this._props.updatedAt = new Date();
+  }
+
+  updateStatus(newStatus: ShipmentStatus): void {
+    // Define allowed transitions for drivers
+    const allowedTransitions: Record<ShipmentStatus, ShipmentStatus[]> = {
+      [ShipmentStatus.PENDING]: [ShipmentStatus.CONFIRMED, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.CONFIRMED]: [ShipmentStatus.PICKED, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.PICKED]: [ShipmentStatus.IN_TRANSIT, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.IN_TRANSIT]: [ShipmentStatus.DELIVERED, ShipmentStatus.RETURNED],
+      [ShipmentStatus.DELIVERED]: [ShipmentStatus.RETURNED],
+      [ShipmentStatus.CANCELLED]: [],
+      [ShipmentStatus.RETURNED]: [],
+    };
+
+    const currentStatus = this._props.status;
+    const allowed = allowedTransitions[currentStatus] || [];
+
+    if (!allowed.includes(newStatus)) {
+      throw new ValidationError(
+        `Invalid status transition: cannot change from ${currentStatus} to ${newStatus}`,
+      );
+    }
+
+    this._props.status = newStatus;
+    this._props.updatedAt = new Date();
+
+    // Auto-set delivery date when marked as delivered
+    if (newStatus === ShipmentStatus.DELIVERED && !this._props.actualDeliveryDate) {
+      this._props.actualDeliveryDate = new Date();
+    }
+  }
+
+  assignToDriver(driverId: string, driverName: string): void {
+    if (this._props.status !== ShipmentStatus.CONFIRMED) {
+      throw new ValidationError("Only confirmed shipments can be assigned to drivers");
+    }
+
+    if (!driverId || driverId.trim() === "") {
+      throw new ValidationError("Driver ID is required");
+    }
+
+    if (!driverName || driverName.trim() === "") {
+      throw new ValidationError("Driver name is required");
+    }
+
+    this._props.driverId = driverId;
+    this._props.driverName = driverName;
     this._props.updatedAt = new Date();
   }
 }

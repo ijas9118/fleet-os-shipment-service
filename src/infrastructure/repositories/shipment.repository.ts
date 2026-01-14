@@ -40,6 +40,8 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
         phone: doc.customer.phone,
       },
       inventoryReservationId: doc.inventoryReservationId,
+      driverId: doc.driverId,
+      driverName: doc.driverName,
       notes: doc.notes,
       estimatedDeliveryDate: doc.estimatedDeliveryDate,
       actualDeliveryDate: doc.actualDeliveryDate,
@@ -131,6 +133,11 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
       query["customer.email"] = customerId; // Using email as customer identifier
     }
 
+    // Filter by driver
+    if (options.driverId) {
+      query.driverId = options.driverId;
+    }
+
     // Filter by date range
     if (startDate || endDate) {
       query.createdAt = {};
@@ -171,6 +178,10 @@ export class ShipmentRepositoryMongo implements IShipmentRepository {
       updateData.customer = updates.customer;
     if (updates.inventoryReservationId !== undefined)
       updateData.inventoryReservationId = updates.inventoryReservationId;
+    if (updates.driverId !== undefined)
+      updateData.driverId = updates.driverId;
+    if (updates.driverName !== undefined)
+      updateData.driverName = updates.driverName;
     if (updates.notes !== undefined)
       updateData.notes = updates.notes;
     if (updates.estimatedDeliveryDate !== undefined)

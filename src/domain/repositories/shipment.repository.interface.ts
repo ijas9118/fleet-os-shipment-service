@@ -8,6 +8,7 @@ export interface ListShipmentsOptions {
   status?: string;
   warehouseId?: string;
   customerId?: string;
+  driverId?: string;
   startDate?: Date;
   endDate?: Date;
   includeDeleted?: boolean;

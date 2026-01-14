@@ -6,6 +6,8 @@ import logger from "@/config/logger";
 import { InsufficientInventoryError } from "@/domain/errors";
 
 import type {
+  AddStockRequest,
+  ConfirmReservationRequest,
   IInventoryServiceClient,
   ReleaseReservationRequest,
   ReserveStockRequest,
@@ -88,6 +90,63 @@ export class InventoryServiceHttpClient implements IInventoryServiceClient {
 
       throw new Error(
         `Failed to release reservation: ${error.response?.data?.message || error.message || "Unknown error"}`,
+      );
+    }
+  }
+
+  async confirmReservation(request: ConfirmReservationRequest): Promise<void> {
+    try {
+      await this.client.post("/api/v1/reservations/confirm", request);
+
+      logger.info("Successfully confirmed reservation in inventory service", {
+        reservationId: request.reservationId,
+      });
+    }
+    catch (error: any) {
+      logger.error("Failed to confirm reservation in inventory service", {
+        error: error.message,
+        response: error.response?.data,
+        reservationId: request.reservationId,
+      });
+
+      throw new Error(
+        `Failed to confirm reservation: ${error.response?.data?.message || error.message || "Unknown error"}`,
+      );
+    }
+  }
+
+  async addStock(request: AddStockRequest): Promise<void> {
+    try {
+      // AddStock endpoint expects single item, so we need to call it for each item
+      for (const item of request.items) {
+        await this.client.post("/api/v1/internal/stock/add", {
+          tenantId: request.tenantId,
+          warehouseId: request.warehouseId,
+          inventoryItemId: item.inventoryItemId,
+          quantity: item.quantity,
+          notes: request.notes,
+        });
+
+        logger.info("Successfully added stock item back to inventory service", {
+          warehouseId: request.warehouseId,
+          inventoryItemId: item.inventoryItemId,
+          quantity: item.quantity,
+        });
+      }
+
+      logger.info("Successfully added all stock items back to inventory service", {
+        warehouseId: request.warehouseId,
+        itemsCount: request.items.length,
+      });
+    }
+    catch (error: any) {
+      logger.error("Failed to add stock in inventory service", {
+        error: error.message,
+        response: error.response?.data,
+      });
+
+      throw new Error(
+        `Failed to add stock: ${error.response?.data?.message || error.message || "Unknown error"}`,
       );
     }
   }

@@ -122,6 +122,13 @@ const ShipmentSchema = new Schema({
     type: String,
     index: true,
   },
+  driverId: {
+    type: String,
+    index: true,
+  },
+  driverName: {
+    type: String,
+  },
   notes: {
     type: String,
   },
