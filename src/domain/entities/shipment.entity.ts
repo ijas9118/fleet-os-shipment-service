@@ -1,5 +1,4 @@
-import type { ReservationStatus, ShipmentStatus } from "../enums";
-
+import { ShipmentStatus } from "../enums";
 import { ValidationError } from "../errors";
 
 export interface Address {
@@ -26,13 +25,6 @@ export interface ShipmentItem {
   unit: string;
 }
 
-export interface Reservation {
-  status: ReservationStatus;
-  reservedAt?: Date;
-  releasedAt?: Date;
-  expiresAt?: Date;
-}
-
 export interface ShipmentProps {
   id?: string;
   tenantId: string;
@@ -42,7 +34,9 @@ export interface ShipmentProps {
   items: ShipmentItem[];
   destinationAddress: Address;
   customer: CustomerDetails;
-  reservation: Reservation;
+  inventoryReservationId?: string; // Reference to inventory service reservation
+  driverId?: string; // Reference to assigned driver
+  driverName?: string; // Driver's name for quick access
   notes?: string;
   estimatedDeliveryDate?: Date;
   actualDeliveryDate?: Date;
@@ -84,9 +78,6 @@ export class Shipment {
 
     // Validate customer details
     this._validateCustomer(props.customer);
-
-    // Validate reservation
-    this._validateReservation(props.reservation);
   }
 
   private _validateItems(items: ShipmentItem[]): void {
@@ -162,16 +153,6 @@ export class Shipment {
     }
   }
 
-  private _validateReservation(reservation: Reservation): void {
-    if (!reservation) {
-      throw new ValidationError("Reservation details are required");
-    }
-
-    if (!reservation.status) {
-      throw new ValidationError("Reservation status is required");
-    }
-  }
-
   // Getters
   get id(): string | undefined {
     return this._props.id;
@@ -205,8 +186,16 @@ export class Shipment {
     return { ...this._props.customer };
   }
 
-  get reservation(): Reservation {
-    return { ...this._props.reservation };
+  get inventoryReservationId(): string | undefined {
+    return this._props.inventoryReservationId;
+  }
+
+  get driverId(): string | undefined {
+    return this._props.driverId;
+  }
+
+  get driverName(): string | undefined {
+    return this._props.driverName;
   }
 
   get notes(): string | undefined {
@@ -239,7 +228,6 @@ export class Shipment {
       items: [...this._props.items],
       destinationAddress: { ...this._props.destinationAddress },
       customer: { ...this._props.customer },
-      reservation: { ...this._props.reservation },
     };
   }
 
@@ -275,9 +263,7 @@ export class Shipment {
     this._props.status = "DELIVERED" as ShipmentStatus;
     this._props.actualDeliveryDate = deliveryDate || new Date();
     this._props.updatedAt = new Date();
-
-    // Release reservation on delivery
-    this.releaseReservation();
+    // Note: Inventory service should be called to release reservation
   }
 
   cancel(): void {
@@ -286,9 +272,7 @@ export class Shipment {
     }
     this._props.status = "CANCELLED" as ShipmentStatus;
     this._props.updatedAt = new Date();
-
-    // Release reservation on cancellation
-    this.releaseReservation();
+    // Note: Inventory service should be called to release reservation
   }
 
   markAsReturned(): void {
@@ -301,12 +285,6 @@ export class Shipment {
 
   archive(): void {
     this._props.deletedAt = new Date();
-    this._props.updatedAt = new Date();
-  }
-
-  releaseReservation(): void {
-    this._props.reservation.status = "RELEASED" as ReservationStatus;
-    this._props.reservation.releasedAt = new Date();
     this._props.updatedAt = new Date();
   }
 
@@ -332,6 +310,54 @@ export class Shipment {
 
   updateEstimatedDeliveryDate(date: Date): void {
     this._props.estimatedDeliveryDate = date;
+    this._props.updatedAt = new Date();
+  }
+
+  updateStatus(newStatus: ShipmentStatus): void {
+    // Define allowed transitions for drivers
+    const allowedTransitions: Record<ShipmentStatus, ShipmentStatus[]> = {
+      [ShipmentStatus.PENDING]: [ShipmentStatus.CONFIRMED, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.CONFIRMED]: [ShipmentStatus.PICKED, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.PICKED]: [ShipmentStatus.IN_TRANSIT, ShipmentStatus.CANCELLED],
+      [ShipmentStatus.IN_TRANSIT]: [ShipmentStatus.DELIVERED, ShipmentStatus.RETURNED],
+      [ShipmentStatus.DELIVERED]: [ShipmentStatus.RETURNED],
+      [ShipmentStatus.CANCELLED]: [],
+      [ShipmentStatus.RETURNED]: [],
+    };
+
+    const currentStatus = this._props.status;
+    const allowed = allowedTransitions[currentStatus] || [];
+
+    if (!allowed.includes(newStatus)) {
+      throw new ValidationError(
+        `Invalid status transition: cannot change from ${currentStatus} to ${newStatus}`,
+      );
+    }
+
+    this._props.status = newStatus;
+    this._props.updatedAt = new Date();
+
+    // Auto-set delivery date when marked as delivered
+    if (newStatus === ShipmentStatus.DELIVERED && !this._props.actualDeliveryDate) {
+      this._props.actualDeliveryDate = new Date();
+    }
+  }
+
+  assignToDriver(driverId: string, driverName: string): void {
+    if (this._props.status !== ShipmentStatus.CONFIRMED) {
+      throw new ValidationError("Only confirmed shipments can be assigned to drivers");
+    }
+
+    if (!driverId || driverId.trim() === "") {
+      throw new ValidationError("Driver ID is required");
+    }
+
+    if (!driverName || driverName.trim() === "") {
+      throw new ValidationError("Driver name is required");
+    }
+
+    this._props.driverId = driverId;
+    this._props.driverName = driverName;
     this._props.updatedAt = new Date();
   }
 }

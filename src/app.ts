@@ -6,7 +6,9 @@ import express from "express";
 import helmet from "helmet";
 
 import logger from "./config/logger";
+import { buildContainer } from "./di/container";
 import { errorHandler, notFoundHandler } from "./presentation/middlewares";
+import { buildShipmentRoutes } from "./presentation/routes/shipment.routes";
 
 export default function createApp(): Application {
   const app = express();
@@ -24,9 +26,11 @@ export default function createApp(): Application {
     res.status(STATUS_CODES.OK).json({ status: "ok" });
   });
 
-  app.use("/api/v1/shipments", (req: Request, res: Response) => {
-    res.status(STATUS_CODES.OK).json({ status: "Core routes not implemented" });
-  });
+  // Initialize DI container
+  const container = buildContainer();
+
+  // Register routes
+  app.use("/api/v1/shipments", buildShipmentRoutes(container.controllers.shipmentController));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

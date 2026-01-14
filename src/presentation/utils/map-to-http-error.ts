@@ -12,8 +12,17 @@ export function mapToHttpError(err: unknown): AppError {
   if (err instanceof ValidationError)
     return new BadRequestError(err.message);
 
-  if (err instanceof InsufficientInventoryError)
-    return new BadRequestError(err.message);
+  if (err instanceof InsufficientInventoryError) {
+    const error = new BadRequestError(err.message);
+    // Attach metadata for better error responses
+    (error as any).code = "INSUFFICIENT_INVENTORY";
+    (error as any).details = {
+      sku: (err as any).itemSku,
+      required: (err as any).required,
+      available: (err as any).available,
+    };
+    return error;
+  }
 
   // if (err instanceof InvalidStatusTransitionError)
   //   return new BadRequestError(err.message);
